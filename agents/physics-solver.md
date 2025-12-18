@@ -37,10 +37,18 @@ You are an autonomous mathematical physics problem solver with access to the The
 ## Your Capabilities
 
 You have access to:
-1. **Symbolic Math**: Lie algebras, SymPy operations, high-precision arithmetic
-2. **Numerical Physics**: Quantum chemistry (HF, DFT, CCSD), quantum circuits
-3. **Physics ML**: Fourier Neural Operators, E3NN, Physics-Informed Neural Networks
-4. **Theorem Proving**: Lean 4 with mathlib4, LeanHammer
+1. **Symbolic Math**: Lie algebras (E6, E7, E8), SymPy calculus, high-precision arithmetic (mpmath)
+2. **Numerical Physics**:
+   - Quantum chemistry (HF, DFT, CCSD) via GPU4PySCF/PySCF
+   - Quantum circuits (Bell, GHZ, custom) via Qiskit
+   - Open quantum systems (Rabi, Jaynes-Cummings, spin chains) via QuTiP
+   - Quantum state analysis (entanglement, separability) via toqito
+3. **Physics ML**:
+   - Fourier Neural Operators (FNO/TFNO) for PDE operator learning
+   - E3NN for equivariant molecular property prediction
+   - Physics-Informed Neural Networks (PINNs) for PDE solving
+   - VQE/QAOA for variational quantum algorithms
+4. **Theorem Proving**: Lean 4 with RobustLeanProver (auto fallback, caching, parallel search)
 
 ## Theory2 CLI
 
@@ -59,16 +67,40 @@ theory --json symbolic eval --expr="x**2" --substitutions='{"x":3}'
 theory --json symbolic diff --expr="sin(x)" --symbol=x
 ```
 
-**numerical**: Quantum chemistry, circuits
+**numerical**: Quantum chemistry, circuits, open quantum systems
 ```bash
+# Quantum chemistry (HF, DFT, CCSD)
 theory --json numerical quantum-chemistry --molecule="H2O" --method=dft --xc=b3lyp
+theory --json numerical quantum-chemistry --molecule="H2" --method=hf --basis=sto-3g
+
+# Quantum circuits (Qiskit)
 theory --json numerical quantum-circuit --circuit=bell --shots=1024
+theory --json numerical quantum-circuit --circuit=ghz3 --statevector
+
+# Open quantum systems (QuTiP)
+theory --json numerical open-quantum-system --system=rabi --gamma=0.1 --t-final=10
+theory --json numerical open-quantum-system --system=jaynes-cummings --t-final=50
+theory --json numerical open-quantum-system --system=spin-chain
+
+# Quantum state analysis (toqito)
+theory --json numerical quantum-state-analysis --state-type=bell
+theory --json numerical quantum-state-analysis --state-type=ghz --n-qubits=3
+theory --json numerical quantum-state-analysis --state-type=werner --alpha=0.7
 ```
 
-**ml**: Neural operators, PINNs
+**ml**: Neural operators, PINNs, variational quantum
 ```bash
+# Fourier Neural Operators
 theory --json ml train-fno --modes=16 --width=64 --factorization=tucker
-theory --json ml solve-pde --pde-type=heat --iterations=10000
+theory --json ml train-e3nn --irreps-hidden="16x0e+16x1o" --use-gates
+
+# Physics-Informed Neural Networks
+theory --json ml solve-pde --pde-type=heat --iterations=10000 --alpha=0.01
+theory --json ml solve-pde --pde-type=poisson --iterations=20000
+
+# Variational Quantum Algorithms
+theory --json ml run-vqe --molecule=H2 --bond-length=0.74 --basis=sto-3g
+theory --json ml run-qaoa --problem-type=maxcut --n-qubits=4 --depth=2
 ```
 
 **prove**: Lean 4 theorems (RobustLeanProver with auto fallback)

@@ -303,6 +303,187 @@ Examples:
         }
     },
     {
+        "name": "theory2_numerical_open_quantum_system",
+        "description": """Simulate open quantum systems using QuTiP (Lindblad master equation).
+
+Compute time evolution of quantum systems with decoherence and dissipation.
+
+Available systems:
+- rabi: Rabi oscillations of a driven qubit with decay
+- jaynes-cummings: Atom-cavity coupling (quantum optics)
+- spin-chain: Transverse field Ising model
+
+Parameters:
+- gamma: Decoherence/decay rate
+- t_final: Simulation end time
+- n_times: Number of time points
+
+Examples:
+- system="rabi", gamma=0.1 → Damped Rabi oscillations
+- system="jaynes-cummings", t_final=50 → Cavity QED dynamics
+- system="spin-chain" → Many-body quantum dynamics""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "system": {
+                    "type": "string",
+                    "enum": ["rabi", "jaynes-cummings", "spin-chain"],
+                    "description": "Type of quantum system"
+                },
+                "gamma": {
+                    "type": "number",
+                    "description": "Decoherence rate",
+                    "default": 0.1
+                },
+                "t_final": {
+                    "type": "number",
+                    "description": "Final simulation time",
+                    "default": 10.0
+                },
+                "n_times": {
+                    "type": "integer",
+                    "description": "Number of time points",
+                    "default": 100
+                }
+            },
+            "required": ["system"]
+        }
+    },
+    {
+        "name": "theory2_numerical_quantum_state_analysis",
+        "description": """Analyze quantum states using toqito (quantum information theory).
+
+Compute entanglement measures, separability, and state properties.
+
+Available state types:
+- bell: Bell states (|00⟩+|11⟩)/√2 - maximally entangled
+- ghz: GHZ states - multi-qubit entanglement
+- werner: Werner states - mixed states parameterized by alpha
+
+Computed properties:
+- Purity (1 = pure, <1 = mixed)
+- Von Neumann entropy
+- Negativity, log-negativity
+- Concurrence (2-qubit entanglement)
+- PPT separability test
+
+Examples:
+- state_type="bell" → Analyze Bell state entanglement
+- state_type="ghz", n_qubits=3 → 3-qubit GHZ analysis
+- state_type="werner", alpha=0.7 → Mixed state with 70% purity""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "state_type": {
+                    "type": "string",
+                    "enum": ["bell", "ghz", "werner"],
+                    "description": "Type of quantum state"
+                },
+                "n_qubits": {
+                    "type": "integer",
+                    "description": "Number of qubits (for GHZ)",
+                    "default": 2
+                },
+                "alpha": {
+                    "type": "number",
+                    "description": "Mixing parameter (for Werner state, 0-1)",
+                    "default": 0.5
+                }
+            },
+            "required": ["state_type"]
+        }
+    },
+    {
+        "name": "theory2_ml_run_vqe",
+        "description": """Run Variational Quantum Eigensolver (VQE) for molecular ground states.
+
+VQE is a hybrid quantum-classical algorithm for finding ground state energies.
+Uses parameterized quantum circuits optimized classically.
+
+Parameters:
+- molecule: Molecular formula (H2, LiH, etc.)
+- bond_length: Interatomic distance in Angstroms
+- basis: Basis set (sto-3g, 6-31G)
+- n_layers: Ansatz circuit depth
+
+Examples:
+- molecule="H2", bond_length=0.74 → H2 ground state (~-1.14 Ha)
+- molecule="LiH", bond_length=1.6 → LiH ground state
+- n_layers=3 → Deeper ansatz for better accuracy""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "molecule": {
+                    "type": "string",
+                    "description": "Molecule formula",
+                    "default": "H2"
+                },
+                "bond_length": {
+                    "type": "number",
+                    "description": "Bond length in Angstroms",
+                    "default": 0.74
+                },
+                "basis": {
+                    "type": "string",
+                    "description": "Basis set",
+                    "default": "sto-3g"
+                },
+                "n_layers": {
+                    "type": "integer",
+                    "description": "Number of ansatz layers",
+                    "default": 2
+                },
+                "max_iterations": {
+                    "type": "integer",
+                    "description": "Max optimization iterations",
+                    "default": 100
+                }
+            }
+        }
+    },
+    {
+        "name": "theory2_ml_run_qaoa",
+        "description": """Run Quantum Approximate Optimization Algorithm (QAOA).
+
+QAOA solves combinatorial optimization problems using quantum circuits.
+Alternates between cost and mixer Hamiltonians.
+
+Problem types:
+- maxcut: Maximum cut problem on graphs
+- tsp: Traveling salesman (small instances)
+- sat: Boolean satisfiability
+
+Parameters:
+- problem_type: Type of optimization problem
+- n_qubits: Problem size
+- depth: Number of QAOA layers (p)
+
+Examples:
+- problem_type="maxcut", n_qubits=4 → 4-node MaxCut
+- depth=3 → Deeper circuit for better approximation""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "problem_type": {
+                    "type": "string",
+                    "enum": ["maxcut", "tsp", "sat"],
+                    "description": "Type of optimization problem",
+                    "default": "maxcut"
+                },
+                "n_qubits": {
+                    "type": "integer",
+                    "description": "Number of qubits/problem size",
+                    "default": 4
+                },
+                "depth": {
+                    "type": "integer",
+                    "description": "QAOA circuit depth (p)",
+                    "default": 2
+                }
+            }
+        }
+    },
+    {
         "name": "theory2_ml_train_fno",
         "description": """Train a Fourier Neural Operator for PDE solving.
 
@@ -638,6 +819,48 @@ def handle_tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             args.extend(["--shots", str(arguments["shots"])])
         if arguments.get("statevector"):
             args.append("--statevector")
+        return run_theory2_command(args)
+
+    elif name == "theory2_numerical_open_quantum_system":
+        args = ["numerical", "open-quantum-system", "--system", arguments["system"]]
+        if arguments.get("gamma"):
+            args.extend(["--gamma", str(arguments["gamma"])])
+        if arguments.get("t_final"):
+            args.extend(["--t-final", str(arguments["t_final"])])
+        if arguments.get("n_times"):
+            args.extend(["--n-times", str(arguments["n_times"])])
+        return run_theory2_command(args)
+
+    elif name == "theory2_numerical_quantum_state_analysis":
+        args = ["numerical", "quantum-state-analysis", "--state-type", arguments["state_type"]]
+        if arguments.get("n_qubits"):
+            args.extend(["--n-qubits", str(arguments["n_qubits"])])
+        if arguments.get("alpha"):
+            args.extend(["--alpha", str(arguments["alpha"])])
+        return run_theory2_command(args)
+
+    elif name == "theory2_ml_run_vqe":
+        args = ["ml", "run-vqe"]
+        if arguments.get("molecule"):
+            args.extend(["--molecule", arguments["molecule"]])
+        if arguments.get("bond_length"):
+            args.extend(["--bond-length", str(arguments["bond_length"])])
+        if arguments.get("basis"):
+            args.extend(["--basis", arguments["basis"]])
+        if arguments.get("n_layers"):
+            args.extend(["--n-layers", str(arguments["n_layers"])])
+        if arguments.get("max_iterations"):
+            args.extend(["--max-iterations", str(arguments["max_iterations"])])
+        return run_theory2_command(args)
+
+    elif name == "theory2_ml_run_qaoa":
+        args = ["ml", "run-qaoa"]
+        if arguments.get("problem_type"):
+            args.extend(["--problem-type", arguments["problem_type"]])
+        if arguments.get("n_qubits"):
+            args.extend(["--n-qubits", str(arguments["n_qubits"])])
+        if arguments.get("depth"):
+            args.extend(["--depth", str(arguments["depth"])])
         return run_theory2_command(args)
 
     elif name == "theory2_ml_train_fno":
