@@ -130,25 +130,56 @@ theory --json ml train-e3nn --irreps-hidden="32x0e+16x1o+8x2e" --use-gates
 
 ## Theorem Proving
 
-### Lean 4 Proofs
+### RobustLeanProver (Recommended)
+
+Automatic proof search with intelligent tactic selection:
 
 ```bash
-# Simple proofs
-theory --json prove lean --statement="2 + 2 = 4" --tactic=norm_num
+# Auto mode - tries 14+ tactics with parallel search
+theory --json prove lean --statement="2 + 2 = 4"
+theory --json prove lean --statement="∀ n : Nat, n + 0 = n"
 
-# Ring algebra
-theory --json prove lean --statement="∀ x y : Int, x + y = y + x" --tactic=ring
-
-# Difficult proofs with LeanHammer
-theory --json prove lean --statement="<complex>" --hammer
+# Specific tactics
+theory --json prove lean --statement="2 + 2 = 4" --tactic=rfl
+theory --json prove lean --statement="10 * 10 = 100" --tactic=decide
+theory --json prove lean --statement="∀ x, x + 0 = x" --tactic=omega
 ```
 
-### Mathlib Search
+### Tactic Tiers (Auto Mode)
 
-Search 210K+ theorems:
+| Tier | Tactics | Speed | Mode |
+|------|---------|-------|------|
+| fast | rfl, trivial, decide | ~100ms | Parallel |
+| arithmetic | norm_num, omega, ring, simp | ~500ms | Parallel |
+| search | simp_all, aesop, tauto | ~3s | Sequential |
+| combined | simp; ring, norm_num; simp | ~10s | Sequential |
+
+### Problem Type Detection
+
+| Type | Example | Suggested Tactics |
+|------|---------|-------------------|
+| arithmetic | `2 + 2 = 4` | rfl, decide, norm_num |
+| algebraic | `(a+b)^2 = ...` | ring (needs mathlib) |
+| inductive | `List.length ...` | induction, cases |
+| logical | `True`, `1 < 2` | decide, tauto |
+
+### Proof Caching
+
+- Successful proofs cached to `~/.cache/theory2/proofs/`
+- Cache hits are instant (no REPL call)
+- Use `--no-cache` to force re-computation
+
+### Searching & Saving Proofs
 
 ```bash
+# Save successful proof
+theory --json prove lean --statement="3 + 3 = 6" --save
+
+# Search proofs
 theory --json prove search --query="continuous" --search-in=both
+
+# List saved
+theory --json prove list --verified-only
 ```
 
 ## Scientific Validation Workflow
@@ -205,6 +236,7 @@ The plugin provides MCP tools for direct invocation:
 
 - **physics-solver**: Autonomous multi-step problem solving
 - **physics-verifier**: Cross-validation and verification
+- **theorem-prover**: Automated Lean 4 theorem proving with RobustLeanProver
 
 ## Best Practices
 

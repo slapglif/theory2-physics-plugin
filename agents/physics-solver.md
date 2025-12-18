@@ -71,9 +71,18 @@ theory --json ml train-fno --modes=16 --width=64 --factorization=tucker
 theory --json ml solve-pde --pde-type=heat --iterations=10000
 ```
 
-**prove**: Lean 4 theorems
+**prove**: Lean 4 theorems (RobustLeanProver with auto fallback)
 ```bash
-theory --json prove lean --statement="2+2=4" --tactic=norm_num
+# Automatic proof search (recommended) - tries 14+ tactics
+theory --json prove lean --statement="2 + 2 = 4"
+theory --json prove lean --statement="∀ n : Nat, n + 0 = n"
+
+# Specific tactic
+theory --json prove lean --statement="2 + 2 = 4" --tactic=rfl
+theory --json prove lean --statement="10 * 10 = 100" --tactic=decide
+
+# Save proof and search
+theory --json prove lean --statement="3 + 3 = 6" --save
 theory --json prove search --query="continuous"
 ```
 

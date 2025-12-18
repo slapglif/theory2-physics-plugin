@@ -1,6 +1,6 @@
 ---
 name: prove
-description: Theorem proving - Lean 4 proofs, mathlib search
+description: Theorem proving - Lean 4 with RobustLeanProver (auto fallback, parallel search, caching)
 argument-hint: <operation> [options]
 allowed-tools:
   - Bash
@@ -9,65 +9,88 @@ allowed-tools:
 
 # Theory2 Theorem Proving
 
-Prove mathematical statements using Lean 4 and search mathlib4.
+Prove mathematical statements using Lean 4 with RobustLeanProver, which provides intelligent tactic selection, parallel proof search, and caching.
 
-## Proving Theorems
+## Quick Start (Recommended)
 
 ```bash
-# Simple arithmetic
+# Automatic proof search - tries 14+ tactics intelligently
 /home/mikeb/theory2/.venv/bin/theory --json prove lean \
-  --statement="2 + 2 = 4" --tactic=norm_num
+  --statement="2 + 2 = 4"
 
-# Ring algebra
+# Quantified statements
 /home/mikeb/theory2/.venv/bin/theory --json prove lean \
-  --statement="∀ x y : Int, x + y = y + x" --tactic=ring
-
-# Using LeanHammer for difficult proofs
-/home/mikeb/theory2/.venv/bin/theory --json prove lean \
-  --statement="∀ n : Nat, n + 0 = n" --hammer
-
-# Save successful proof
-/home/mikeb/theory2/.venv/bin/theory --json prove lean \
-  --statement="1 + 1 = 2" --tactic=norm_num --save
+  --statement="∀ n : Nat, n + 0 = n"
 ```
 
-## Available Tactics
+## Tactic Tiers (Auto Mode)
 
-| Tactic | Use Case | Example |
-|--------|----------|---------|
-| `norm_num` | Numerical computation | `2^10 = 1024` |
-| `ring` | Ring equations | `(a+b)² = a²+2ab+b²` |
-| `simp` | Simplification | Uses simp lemmas |
-| `omega` | Linear arithmetic | Integer inequalities |
-| `auto` | Automatic selection | Tries multiple tactics |
-| `hammer` | LeanHammer | Complex proofs (external solvers) |
+RobustLeanProver tries tactics in order:
 
-## Searching Theorems
+| Tier | Tactics | Speed | Mode |
+|------|---------|-------|------|
+| fast | rfl, trivial, decide | ~100ms | Parallel |
+| arithmetic | norm_num, omega, ring, simp | ~500ms | Parallel |
+| search | simp_all, aesop, tauto | ~3s | Sequential |
+| combined | simp; ring, norm_num; simp | ~10s | Sequential |
 
-Search mathlib4's 210K+ theorems:
+## Specific Tactics
 
 ```bash
-# Search by name
-/home/mikeb/theory2/.venv/bin/theory --json prove search \
-  --query="add_comm" --search-in=name
+# Reflexivity (fastest)
+theory --json prove lean --statement="2 + 2 = 4" --tactic=rfl
 
-# Search in statements
-/home/mikeb/theory2/.venv/bin/theory --json prove search \
-  --query="continuous" --search-in=statement
+# Decidable propositions
+theory --json prove lean --statement="10 * 10 = 100" --tactic=decide
 
-# Search both
-/home/mikeb/theory2/.venv/bin/theory --json prove search \
-  --query="prime" --search-in=both
+# Linear arithmetic
+theory --json prove lean --statement="∀ n : Nat, n ≤ n + 1" --tactic=omega
+
+# Simplification
+theory --json prove lean --statement="∀ x, x + 0 = x" --tactic=simp
+
+# Ring algebra (requires mathlib in REPL)
+theory --json prove lean --statement="∀ a b : Int, a + b = b + a" --tactic=ring
 ```
 
-## Listing Proofs
+## Options
 
 ```bash
-# List all saved proofs
-/home/mikeb/theory2/.venv/bin/theory --json prove list
+--statement="..."    # Lean 4 statement to prove (required)
+--tactic=auto        # RobustLeanProver (default, recommended)
+--tactic=<name>      # Specific tactic: rfl, simp, decide, omega, ring
+--timeout=60         # Timeout in seconds (default: 60)
+--no-cache           # Disable proof caching
+--save               # Save to proof certificate store
+```
 
-# Only verified proofs
-/home/mikeb/theory2/.venv/bin/theory --json prove list --verified-only
+## Problem Type → Best Tactics
+
+| Problem Type | Example | Suggested Tactics |
+|--------------|---------|-------------------|
+| Numeric equality | `2 + 2 = 4` | rfl, decide |
+| Linear arithmetic | `n + 0 = n` | omega, simp |
+| Ring/polynomial | `(a+b)^2 = ...` | ring (needs mathlib) |
+| Decidable prop | `True`, `1 < 2` | decide |
+| Inductive | `List.length ...` | induction, cases |
+
+## Proof Caching
+
+- Successful proofs are cached to `~/.cache/theory2/proofs/`
+- Same statement = instant cache hit (no REPL call)
+- Use `--no-cache` to force re-computation
+
+## Searching & Listing Proofs
+
+```bash
+# Search by keyword
+theory --json prove search --query="add_comm" --search-in=name
+theory --json prove search --query="continuous" --search-in=statement
+theory --json prove search --query="prime" --search-in=both
+
+# List saved proofs
+theory --json prove list
+theory --json prove list --verified-only
 ```
 
 ## Lean 4 Statement Syntax
@@ -77,10 +100,49 @@ Search mathlib4's 210K+ theorems:
 - **Operators**: `+`, `-`, `*`, `/`, `^`, `=`, `≠`, `<`, `≤`, `>`, `≥`
 - **Logic**: `∧` (and), `∨` (or), `→` (implies), `¬` (not)
 
-## Argument Parsing
+## Expected Output
 
-1. **lean** with --statement: Prove a theorem
-2. **search** with --query: Search mathlib
-3. **list**: Show saved proofs
+### Successful Proof
+```json
+{
+  "status": "success",
+  "result": {
+    "proof_complete": true,
+    "theorem": "theorem_123456",
+    "statement": "2 + 2 = 4",
+    "proof_text": "theorem theorem_123456 : 2 + 2 = 4 := rfl",
+    "tactics_used": ["rfl"],
+    "proof_steps": 1
+  },
+  "metadata": {
+    "mode": "robust_fallback",
+    "duration_ms": 403
+  }
+}
+```
 
-Always use `--json` for structured output.
+### Failed Proof
+```json
+{
+  "status": "error",
+  "error": {
+    "type": "ProofFailed",
+    "message": "Exhausted all 14 tactics across 4 tiers"
+  }
+}
+```
+
+## Python API
+
+```python
+from theorem_proving import RobustLeanProver, analyze_problem
+
+# Automatic proof
+prover = RobustLeanProver(verbose=True, use_cache=True)
+result = prover.prove("2 + 2 = 4", timeout=30)
+
+# Problem analysis
+analysis = analyze_problem("(a + b)^2 = a^2 + 2*a*b + b^2")
+print(f"Type: {analysis.problem_type}")  # "algebraic"
+print(f"Suggested: {analysis.suggested_tactics}")  # ["ring", ...]
+```
