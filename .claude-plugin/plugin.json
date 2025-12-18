@@ -1,0 +1,20 @@
+{
+  "name": "theory2-physics",
+  "version": "1.0.0",
+  "description": "Mathematical physics tooling suite - symbolic math, numerical physics, ML, theorem proving, and verification",
+  "author": {
+    "name": "slapglif",
+    "url": "https://github.com/slapglif"
+  },
+  "repository": "https://github.com/slapglif/theory2",
+  "license": "MIT",
+  "keywords": [
+    "physics",
+    "mathematics",
+    "symbolic-math",
+    "quantum-chemistry",
+    "theorem-proving",
+    "neural-operators",
+    "lie-algebras"
+  ]
+}

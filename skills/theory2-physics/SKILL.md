@@ -1,0 +1,215 @@
+---
+name: theory2-physics
+description: Use when performing mathematical physics computations - Lie algebras, quantum chemistry, neural operators, theorem proving, or scientific validation. Provides guidance on Theory2 CLI usage, computational workflows, and verification methodology.
+version: 1.0.0
+---
+
+# Theory2 Mathematical Physics Tooling
+
+Master the Theory2 suite for mathematical physics computation.
+
+## Quick Reference
+
+All commands use the pattern:
+```bash
+/home/mikeb/theory2/.venv/bin/theory --json <group> <action> [options]
+```
+
+Always use `--json` for structured, parseable output.
+
+## Module Selection Guide
+
+| Task | Module | Key Commands |
+|------|--------|--------------|
+| Lie algebras, α⁻¹=137 | symbolic | `compute-e7-alpha`, `lie-algebra` |
+| Calculus, equations | symbolic | `diff`, `integrate`, `solve` |
+| Molecular energies | numerical | `quantum-chemistry --method=dft` |
+| Quantum circuits | numerical | `quantum-circuit --circuit=bell` |
+| PDE solving | ml | `solve-pde --pde-type=heat` |
+| Operator learning | ml | `train-fno`, `train-e3nn` |
+| Theorem proving | prove | `lean --statement="..."` |
+| Cross-validation | verify | `cross-check --claim="..."` |
+
+## Symbolic Mathematics
+
+### Lie Algebra Computations
+
+The E7 formula connects exceptional Lie algebras to fundamental physics:
+
+```bash
+# Compute α⁻¹ from E7 structure
+theory --json symbolic compute-e7-alpha --verify
+
+# Query individual properties
+theory --json symbolic lie-algebra --type=E7 --query=dimension     # → 133
+theory --json symbolic lie-algebra --type=E7 --query=rank          # → 7
+theory --json symbolic lie-algebra --type=E7 --query=fundamental_rep  # → 56
+```
+
+Formula: α⁻¹ = dim(E7) + fund_rep/(2×rank) = 133 + 56/14 = 137
+
+### Expression Operations
+
+```bash
+# Evaluate with substitution
+theory --json symbolic eval --expr="(x+y)**2" --substitutions='{"x":1,"y":2}'
+
+# Calculus
+theory --json symbolic diff --expr="x**3 * sin(x)" --symbol=x
+theory --json symbolic integrate --expr="exp(-x**2)" --symbol=x
+
+# Equation solving
+theory --json symbolic solve --expr="x**3 - 8" --symbol=x
+```
+
+## Numerical Physics
+
+### Quantum Chemistry
+
+Methods ranked by accuracy/cost:
+1. **HF** (Hartree-Fock): Fastest, no correlation
+2. **DFT** (B3LYP, PBE): Good balance
+3. **CCSD**: Most accurate, expensive
+
+```bash
+# Water with DFT
+theory --json numerical quantum-chemistry \
+  --molecule="H2O" --method=dft --xc=b3lyp --basis=def2-svp
+
+# Custom geometry
+theory --json numerical quantum-chemistry \
+  --molecule="O 0 0 0; H 0.757 0.587 0; H -0.757 0.587 0" \
+  --method=ccsd --basis=cc-pVDZ
+```
+
+### Quantum Circuits
+
+```bash
+# Bell state measurement
+theory --json numerical quantum-circuit --circuit=bell --shots=1024
+
+# GHZ statevector
+theory --json numerical quantum-circuit --circuit=ghz3 --statevector
+```
+
+## Physics Machine Learning
+
+### Fourier Neural Operators
+
+For learning PDE solution operators:
+
+```bash
+# Standard FNO
+theory --json ml train-fno --modes=16 --width=64 --layers=4
+
+# Memory-efficient
+theory --json ml train-fno --modes=32 --width=128 --factorization=tucker
+```
+
+**Tucker factorization** reduces memory ~10x for large models.
+
+### Physics-Informed Neural Networks
+
+Solve PDEs without training data:
+
+```bash
+# Heat equation
+theory --json ml solve-pde --pde-type=heat --alpha=0.01 --iterations=10000
+
+# Poisson equation
+theory --json ml solve-pde --pde-type=poisson --iterations=20000
+```
+
+### E3NN Equivariant Networks
+
+For molecular systems respecting 3D symmetry:
+
+```bash
+theory --json ml train-e3nn --irreps-hidden="32x0e+16x1o+8x2e" --use-gates
+```
+
+## Theorem Proving
+
+### Lean 4 Proofs
+
+```bash
+# Simple proofs
+theory --json prove lean --statement="2 + 2 = 4" --tactic=norm_num
+
+# Ring algebra
+theory --json prove lean --statement="∀ x y : Int, x + y = y + x" --tactic=ring
+
+# Difficult proofs with LeanHammer
+theory --json prove lean --statement="<complex>" --hammer
+```
+
+### Mathlib Search
+
+Search 210K+ theorems:
+
+```bash
+theory --json prove search --query="continuous" --search-in=both
+```
+
+## Scientific Validation Workflow
+
+### Hermeneutic Circle Methodology
+
+Apply iterative refinement:
+
+1. **Part→Whole**: Analyze components individually
+2. **Whole→Part**: Use overall structure to inform details
+3. **Iterate**: Refine understanding through cycles
+
+### Prior Knowledge Integration
+
+Before computing, search for relevant prior work:
+
+```
+mcp__plugin_task-memory_task-memory__search(query="<topic>")
+```
+
+### Multi-Method Verification
+
+Always cross-validate critical results:
+
+```bash
+theory --json verify cross-check \
+  --claim="alpha_inv=137" \
+  --methods="symbolic,numerical,experimental" \
+  --tolerance=0.001
+```
+
+### Documentation
+
+Record for reproducibility:
+- Method and parameters used
+- Computational environment
+- Reference values compared against
+- Uncertainty quantification
+
+## MCP Tools
+
+The plugin provides MCP tools for direct invocation:
+
+- `theory2_symbolic_compute_e7_alpha`
+- `theory2_symbolic_lie_algebra`
+- `theory2_symbolic_eval/simplify/solve/diff/integrate`
+- `theory2_numerical_quantum_chemistry`
+- `theory2_numerical_quantum_circuit`
+- `theory2_ml_train_fno/train_e3nn/solve_pde`
+- `theory2_prove_lean/search`
+- `theory2_verify_cross_check`
+
+## Agents
+
+- **physics-solver**: Autonomous multi-step problem solving
+- **physics-verifier**: Cross-validation and verification
+
+## Best Practices
+
+1. **Always verify**: Use cross-check for important results
+2. **Document provenance**: Record methods, parameters, references
+3. **Search first**: Check task memory for prior relevant work
+4. **Iterate**: Apply hermeneutic refinement to deepen understanding
+5. **Quantify uncertainty**: Report tolerances and error bounds

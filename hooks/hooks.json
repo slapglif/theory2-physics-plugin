@@ -1,0 +1,26 @@
+{
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "type": "prompt",
+      "prompt": "The Theory2 Mathematical Physics plugin is available. Capabilities include:\n\n• **Symbolic Math**: Lie algebras (E7→α⁻¹=137), SymPy calculus, equation solving\n• **Numerical Physics**: Quantum chemistry (HF/DFT/CCSD), quantum circuits (Qiskit)\n• **Physics ML**: Neural operators (FNO), PINNs, E3NN equivariant networks\n• **Theorem Proving**: Lean 4 proofs, mathlib4 search (210K+ theorems)\n• **Verification**: Cross-check results with symbolic/numerical/experimental methods\n\nUse MCP tools (theory2_*) or slash commands for computations. For autonomous work, use physics-solver or physics-verifier agents."
+    },
+    {
+      "event": "UserPromptSubmit",
+      "type": "prompt",
+      "matchMessageContent": "(prove|verify|validate|derivation|theorem|proof|calculate.*energy|quantum|physics|mathematical.*claim|scientific.*result|check.*result|confirm.*calculation)",
+      "prompt": "## Scientific Validation Protocol\n\nThis appears to involve scientific validation or logical proofing. Apply the following methodology:\n\n### 1. Hermeneutic Circle Approach\n- **Part→Whole**: Understand individual components before synthesizing\n- **Whole→Part**: Let overall structure inform interpretation of details\n- **Iterate**: Refine understanding through multiple passes\n\n### 2. Prior Knowledge Search\nBefore computing, search for relevant prior work:\n```\nmcp__plugin_task-memory_task-memory__search with query describing the scientific topic\n```\nThis retrieves relevant past investigations, proofs, and computed results.\n\n### 3. Multi-Method Verification\nFor any scientific claim, validate with independent methods:\n```bash\n/home/mikeb/theory2/.venv/bin/theory --json verify cross-check \\\n  --claim=\"<claim>\" --methods=\"symbolic,numerical,experimental\"\n```\n\n### 4. Deep Exploration\n- Generate multiple hypotheses\n- Test each systematically\n- Document assumptions explicitly\n- Consider edge cases and boundary conditions\n\n### 5. Resolution\n- Synthesize findings\n- Quantify uncertainties\n- Note any unresolved tensions\n- Document provenance (methods, parameters, references)\n\n**Proceed with this framework in mind. Use physics-verifier agent for complex validations.**"
+    },
+    {
+      "event": "PostToolUse",
+      "type": "prompt",
+      "matchToolName": "theory2_.*|mcp__plugin_theory2-physics_theory2-physics__.*",
+      "prompt": "A Theory2 computation was performed. Consider:\n\n1. **Validate**: Does the result match expectations? Run cross-check if uncertain.\n2. **Document**: Record parameters and methodology for reproducibility.\n3. **Iterate**: Apply hermeneutic refinement - does this result change understanding of the broader problem?\n\nFor critical results, use physics-verifier agent or manual cross-validation."
+    },
+    {
+      "event": "Stop",
+      "type": "prompt",
+      "prompt": "## Session Completion Review\n\nIf scientific work was performed:\n\n1. **Search Memory**: Store significant findings for future reference\n   - Use task-memory tools to catalog important results\n   \n2. **Verification Status**: Were all claims cross-validated?\n   - Unverified claims should be flagged\n   \n3. **Knowledge Integration**: How do results connect to prior knowledge?\n   - Update mental model if new insights emerged\n   \n4. **Open Questions**: What remains unresolved for future investigation?"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "theory2-physics": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/theory2_server.py"],
+      "env": {}
+    }
+  }
+}
