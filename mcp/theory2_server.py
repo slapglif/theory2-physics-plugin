@@ -422,20 +422,38 @@ Examples:
     },
     {
         "name": "theory2_prove_lean",
-        "description": """Prove mathematical statements using Lean 4 theorem prover.
+        "description": """Prove mathematical statements using Lean 4 with RobustLeanProver.
+
+RobustLeanProver provides intelligent tactic selection, parallel proof search, and caching.
+
+Tactic Tiers (auto mode tries in order):
+1. fast (parallel): rfl, trivial, decide (~100ms)
+2. arithmetic (parallel): norm_num, omega, ring, simp (~500ms)
+3. search (sequential): simp_all, aesop, tauto (~3s)
+4. combined (sequential): simp; ring, norm_num; simp (~10s)
 
 Available tactics:
-- auto: Automatic tactic selection
-- simp: Simplification
-- ring: Ring algebra
-- norm_num: Numerical normalization
+- auto: RobustLeanProver with 4-tier fallback (RECOMMENDED)
+- rfl: Reflexivity (fastest for definitional equalities)
+- decide: Decidable propositions
 - omega: Linear arithmetic
-- hammer: LeanHammer (powerful, uses external solvers)
+- simp: Simplification
+- ring: Ring algebra (requires mathlib)
+
+Problem Type Detection:
+- Numeric equality (2 + 2 = 4) → rfl, decide
+- Linear arithmetic (n + 0 = n) → omega, simp
+- Decidable props (True, 1 < 2) → decide
+
+Features:
+- Proof caching: Same statement = instant cache hit
+- Parallel search: Multiple tactics tried simultaneously
+- Problem analysis: Intelligent tactic ordering
 
 Examples:
-- statement="2 + 2 = 4", tactic="norm_num" → trivial proof
-- statement="∀ n : Nat, n + 0 = n", tactic="simp" → uses simp lemmas
-- statement="∀ x y : Int, x + y = y + x", tactic="ring" → ring commutativity""",
+- statement="2 + 2 = 4" → auto mode proves with rfl in ~400ms
+- statement="∀ n : Nat, n + 0 = n" → proves with omega in ~900ms
+- statement="10 * 10 = 100", tactic="decide" → specific tactic""",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -445,18 +463,23 @@ Examples:
                 },
                 "tactic": {
                     "type": "string",
-                    "enum": ["auto", "simp", "ring", "norm_num", "omega", "hammer"],
-                    "description": "Proof tactic to use",
+                    "enum": ["auto", "rfl", "decide", "simp", "omega", "ring", "trivial", "norm_num", "aesop", "tauto"],
+                    "description": "Proof tactic (auto = RobustLeanProver with fallback)",
                     "default": "auto"
                 },
-                "hammer": {
+                "timeout": {
+                    "type": "integer",
+                    "description": "Timeout in seconds",
+                    "default": 60
+                },
+                "no_cache": {
                     "type": "boolean",
-                    "description": "Use LeanHammer for difficult proofs",
+                    "description": "Disable proof caching",
                     "default": False
                 },
                 "save": {
                     "type": "boolean",
-                    "description": "Save successful proof to database",
+                    "description": "Save successful proof to certificate store",
                     "default": False
                 }
             },
@@ -651,8 +674,10 @@ def handle_tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         args = ["prove", "lean", "--statement", arguments["statement"]]
         if arguments.get("tactic"):
             args.extend(["--tactic", arguments["tactic"]])
-        if arguments.get("hammer"):
-            args.append("--hammer")
+        if arguments.get("timeout"):
+            args.extend(["--timeout", str(arguments["timeout"])])
+        if arguments.get("no_cache"):
+            args.append("--no-cache")
         if arguments.get("save"):
             args.append("--save")
         return run_theory2_command(args)
