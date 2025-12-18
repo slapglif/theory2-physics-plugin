@@ -2,6 +2,12 @@
   "hooks": [
     {
       "event": "SessionStart",
+      "type": "command",
+      "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/setup-lean.sh > /tmp/theory2-lean-setup.log 2>&1 || true",
+      "timeout": 60
+    },
+    {
+      "event": "SessionStart",
       "type": "prompt",
       "prompt": "The Theory2 Mathematical Physics plugin is available. Capabilities include:\n\n• **Symbolic Math**: Lie algebras (E7→α⁻¹=137), SymPy calculus, equation solving\n• **Numerical Physics**: Quantum chemistry (HF/DFT/CCSD), quantum circuits (Qiskit)\n• **Physics ML**: Neural operators (FNO), PINNs, E3NN equivariant networks\n• **Theorem Proving**: Lean 4 proofs, mathlib4 search (210K+ theorems)\n• **Verification**: Cross-check results with symbolic/numerical/experimental methods\n\nUse MCP tools (theory2_*) or slash commands for computations. For autonomous work, use physics-solver or physics-verifier agents."
     },
