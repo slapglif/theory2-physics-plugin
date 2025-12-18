@@ -5,7 +5,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LEAN_TOOLCHAIN="leanprover/lean4:v4.3.0-rc2"
-MATHLIB_COMMIT="v4.3.0-rc2"
+# Use commit that's pre-traced in LeanDojo's remote cache (downloads ~2.4GB vs hours of tracing)
+MATHLIB_COMMIT="29dcec074de168ac2bf835a77ef68bbe069194c5"
 LEAN_DOJO_CACHE="${LEAN_DOJO_CACHE_DIR:-$HOME/.cache/lean_dojo}"
 
 echo "=== Theory2 Lean 4 + LeanDojo Setup ==="
