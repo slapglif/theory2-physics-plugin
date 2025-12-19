@@ -729,6 +729,345 @@ Examples:
             },
             "required": ["claim"]
         }
+    },
+    {
+        "name": "theory2_bioinformatics_analyze_sequence",
+        "description": """Analyze DNA, RNA, or protein sequences using Biopython.
+
+Computes sequence properties including:
+- Sequence length and composition
+- GC content (for nucleotide sequences)
+- Molecular weight
+- Amino acid frequency (for proteins)
+
+Auto-detects sequence type or you can specify explicitly.
+
+Examples:
+- sequence="ATGCGATCGATCG" → DNA analysis with GC content
+- sequence="MVLSPADKTNVK", seq_type="protein" → Protein properties
+- sequence="AUGCGAUCGAUCG", seq_type="rna" → RNA analysis""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sequence": {
+                    "type": "string",
+                    "description": "DNA/RNA/Protein sequence string"
+                },
+                "seq_type": {
+                    "type": "string",
+                    "enum": ["auto", "dna", "rna", "protein"],
+                    "description": "Sequence type (default: auto-detect)",
+                    "default": "auto"
+                },
+                "explain": {
+                    "type": "boolean",
+                    "description": "Include detailed explanation",
+                    "default": False
+                }
+            },
+            "required": ["sequence"]
+        }
+    },
+    {
+        "name": "theory2_bioinformatics_translate_dna",
+        "description": """Translate DNA sequence to protein using genetic code.
+
+Uses standard codon table by default. Supports alternative tables:
+- 1: Standard (default)
+- 2: Vertebrate Mitochondrial
+- 3: Yeast Mitochondrial
+- And more (see NCBI codon tables)
+
+Returns the translated protein sequence in one-letter amino acid codes.
+
+Examples:
+- sequence="ATGGCTAGCTAG" → Translates to protein (M-A-S-*)
+- sequence="ATGAAATGA", table=1 → Uses standard genetic code
+- sequence="ATGAAATAA", table=2 → Uses mitochondrial code""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sequence": {
+                    "type": "string",
+                    "description": "DNA sequence to translate"
+                },
+                "table": {
+                    "type": "integer",
+                    "description": "Codon table (1=Standard, 2=Mitochondrial)",
+                    "default": 1
+                }
+            },
+            "required": ["sequence"]
+        }
+    },
+    {
+        "name": "theory2_bioinformatics_analyze_protein",
+        "description": """Analyze protein sequence properties using Biopython ProteinAnalysis.
+
+Computes comprehensive protein properties:
+- Molecular weight (Da)
+- Isoelectric point (pI)
+- Instability index (>40 = unstable)
+- GRAVY score (hydrophobicity: + = hydrophobic, - = hydrophilic)
+- Amino acid composition and frequencies
+- Aromaticity
+
+Examples:
+- sequence="MVLSPADKTNVK" → Basic protein analysis
+- sequence="MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSH" → Hemoglobin fragment analysis
+- explain=true → Include detailed property explanations""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "sequence": {
+                    "type": "string",
+                    "description": "Protein sequence (one-letter amino acid codes)"
+                },
+                "explain": {
+                    "type": "boolean",
+                    "description": "Include detailed explanation",
+                    "default": False
+                }
+            },
+            "required": ["sequence"]
+        }
+    },
+    {
+        "name": "theory2_bioinformatics_load_structure",
+        "description": """Load and analyze PDB structure files using Biopython Bio.PDB.
+
+Reads protein structure files in PDB format and extracts:
+- Number of models (NMR structures have multiple)
+- Chain information
+- Residue counts per chain
+- Total atom counts
+- Structure metadata
+
+Useful for structural bioinformatics and understanding protein 3D structures.
+
+Examples:
+- pdb_file="1abc.pdb" → Analyze local PDB file
+- pdb_file="/path/to/protein.pdb" → Full path to structure
+- Returns: models, chains, residues, atoms""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pdb_file": {
+                    "type": "string",
+                    "description": "Path to PDB structure file"
+                }
+            },
+            "required": ["pdb_file"]
+        }
+    },
+    {
+        "name": "theory2_combinatorics_create_graph",
+        "description": """Create graphs from edge lists or use well-known named graphs.
+
+Create custom graphs or use classical graph theory examples:
+
+Named graphs available:
+- petersen: Petersen graph (famous counterexample in graph theory)
+- complete_5, complete_10: Complete graphs K5, K10
+- cube, octahedron, icosahedron, dodecahedron: Platonic solids
+- tutte: Tutte graph (counterexample to Tait's conjecture)
+- heawood: Heawood graph (cage graph)
+- karate: Zachary's karate club (social network)
+
+Or create custom graphs from edge lists.
+
+Examples:
+- named_graph="petersen", analyze=true → Create & analyze Petersen graph
+- edges="[[0,1],[1,2],[2,0]]" → Create triangle graph
+- edges="[[0,1],[1,2]]", graph_type="directed" → Directed graph""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "type": "string",
+                    "description": "Edge list as JSON: [[0,1],[1,2],[2,0]]"
+                },
+                "named_graph": {
+                    "type": "string",
+                    "enum": ["petersen", "complete_5", "complete_10", "cube", "octahedron",
+                             "icosahedron", "dodecahedron", "tutte", "heawood", "karate"],
+                    "description": "Create a well-known graph"
+                },
+                "graph_type": {
+                    "type": "string",
+                    "enum": ["undirected", "directed"],
+                    "description": "Graph type",
+                    "default": "undirected"
+                },
+                "analyze": {
+                    "type": "boolean",
+                    "description": "Include full graph analysis",
+                    "default": False
+                }
+            }
+        }
+    },
+    {
+        "name": "theory2_combinatorics_analyze_graph",
+        "description": """Comprehensive graph analysis using NetworkX algorithms.
+
+Computes extensive graph properties:
+- Connectivity (is_connected, number of components)
+- Density (edge density)
+- Diameter (longest shortest path)
+- Clustering coefficient (local clustering)
+- Planarity (can be drawn without edge crossings)
+- Bipartiteness (2-colorable check)
+- Chromatic number estimate (minimum colors needed)
+- Degree statistics (min, max, average degree)
+
+Examples:
+- edges="[[0,1],[1,2],[2,0]]" → Analyze triangle (diameter=1, connected)
+- edges="[[0,1],[1,2],[2,0],[0,3]]" → Analyze with explanation
+- explain=true → Include detailed property explanations""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "type": "string",
+                    "description": "Edge list as JSON: [[0,1],[1,2],[2,0]]"
+                },
+                "explain": {
+                    "type": "boolean",
+                    "description": "Include detailed explanation",
+                    "default": False
+                }
+            },
+            "required": ["edges"]
+        }
+    },
+    {
+        "name": "theory2_combinatorics_count",
+        "description": """Compute combinatorial counting functions.
+
+Available counting types:
+- permutations: P(n,k) = n!/(n-k)! - ordered selections
+- combinations: C(n,k) = n!/[k!(n-k)!] - unordered selections
+- partitions: Integer partitions p(n)
+- catalan: Catalan numbers C_n = (2n)!/[(n+1)!n!]
+- bell: Bell numbers B_n (number of partitions of a set)
+- stirling: Stirling numbers S(n,k) (set partitions into k subsets)
+- derangements: D(n) - permutations with no fixed points
+- fibonacci: Fibonacci numbers F(n)
+
+Examples:
+- type="permutations", n=5, k=3 → P(5,3) = 60
+- type="combinations", n=10, k=3 → C(10,3) = 120
+- type="catalan", n=5 → C_5 = 42
+- type="bell", n=5, explain=true → B_5 = 52 with formula explanation""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["permutations", "combinations", "partitions", "catalan",
+                             "bell", "stirling", "derangements", "fibonacci"],
+                    "description": "Type of counting"
+                },
+                "n": {
+                    "type": "integer",
+                    "description": "Main parameter n"
+                },
+                "k": {
+                    "type": "integer",
+                    "description": "Secondary parameter k (for permutations, combinations, stirling)"
+                },
+                "explain": {
+                    "type": "boolean",
+                    "description": "Include formula explanation",
+                    "default": False
+                }
+            },
+            "required": ["type", "n"]
+        }
+    },
+    {
+        "name": "theory2_combinatorics_solve_tsp",
+        "description": """Solve the Traveling Salesman Problem using various algorithms.
+
+Finds shortest route visiting all cities exactly once and returning to start.
+
+Available methods:
+- greedy: Fast greedy heuristic (good for large instances)
+- nearest_neighbor: Classic nearest neighbor heuristic
+- christofides: 1.5-approximation algorithm (proven guarantee)
+- exact: Brute force optimal (only for small instances, n ≤ 10)
+
+Distance matrix format: Symmetric n×n matrix with 0 on diagonal.
+
+Examples:
+- distances="[[0,10,15,20],[10,0,35,25],[15,35,0,30],[20,25,30,0]]", method="greedy"
+  → 4-city TSP with greedy solution
+- distances="[[0,1,2],[1,0,3],[2,3,0]]", method="exact"
+  → 3-city optimal solution
+- method="christofides" → Guaranteed ≤ 1.5 × optimal""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "distances": {
+                    "type": "string",
+                    "description": "Distance matrix as JSON: [[0,1,2],[1,0,3],[2,3,0]]"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": ["greedy", "nearest_neighbor", "christofides", "exact"],
+                    "description": "TSP solving method",
+                    "default": "greedy"
+                }
+            },
+            "required": ["distances"]
+        }
+    },
+    {
+        "name": "theory2_combinatorics_solve_knapsack",
+        "description": """Solve the 0/1 Knapsack problem (classic dynamic programming problem).
+
+Given items with values and weights, find the maximum value subset that fits in knapsack.
+
+Methods:
+- dp: Dynamic programming - optimal solution O(n×capacity)
+- greedy: Greedy by value/weight ratio - fast approximation
+
+Returns:
+- Maximum total value achievable
+- Selected item indices
+- Total weight used
+
+Examples:
+- values="[60,100,120]", weights="[10,20,30]", capacity=50
+  → Items 1,2 selected for value=220
+- values="[10,20,30]", weights="[1,2,3]", capacity=4, method="dp"
+  → Optimal: items 0,1,2 (if they fit) or best combination
+- method="greedy" → Fast approximation for large instances""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "values": {
+                    "type": "string",
+                    "description": "Item values as JSON: [60, 100, 120]"
+                },
+                "weights": {
+                    "type": "string",
+                    "description": "Item weights as JSON: [10, 20, 30]"
+                },
+                "capacity": {
+                    "type": "integer",
+                    "description": "Knapsack capacity"
+                },
+                "method": {
+                    "type": "string",
+                    "enum": ["dp", "greedy"],
+                    "description": "Solving method (dp=optimal, greedy=fast)",
+                    "default": "dp"
+                }
+            },
+            "required": ["values", "weights", "capacity"]
+        }
     }
 ]
 
@@ -745,7 +1084,14 @@ def run_theory2_command(args: list[str]) -> dict[str, Any]:
         )
         if result.returncode == 0:
             try:
-                return json.loads(result.stdout)
+                # Theory2 CLI may output extra messages before JSON
+                # Find the first { and parse from there
+                json_start = result.stdout.find('{')
+                if json_start >= 0:
+                    json_str = result.stdout[json_start:]
+                    return json.loads(json_str)
+                else:
+                    return json.loads(result.stdout)
             except json.JSONDecodeError:
                 return {"status": "success", "output": result.stdout}
         else:
@@ -917,6 +1263,71 @@ def handle_tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             args.extend(["--methods", arguments["methods"]])
         if arguments.get("tolerance"):
             args.extend(["--tolerance", str(arguments["tolerance"])])
+        return run_theory2_command(args)
+
+    elif name == "theory2_bioinformatics_analyze_sequence":
+        args = ["bioinformatics", "analyze-sequence", "--sequence", arguments["sequence"]]
+        if arguments.get("seq_type"):
+            args.extend(["--seq-type", arguments["seq_type"]])
+        if arguments.get("explain"):
+            args.append("--explain")
+        return run_theory2_command(args)
+
+    elif name == "theory2_bioinformatics_translate_dna":
+        args = ["bioinformatics", "translate-dna", "--sequence", arguments["sequence"]]
+        if arguments.get("table"):
+            args.extend(["--table", str(arguments["table"])])
+        return run_theory2_command(args)
+
+    elif name == "theory2_bioinformatics_analyze_protein":
+        args = ["bioinformatics", "analyze-protein", "--sequence", arguments["sequence"]]
+        if arguments.get("explain"):
+            args.append("--explain")
+        return run_theory2_command(args)
+
+    elif name == "theory2_bioinformatics_load_structure":
+        args = ["bioinformatics", "load-structure", "--pdb-file", arguments["pdb_file"]]
+        return run_theory2_command(args)
+
+    elif name == "theory2_combinatorics_create_graph":
+        args = ["combinatorics", "create-graph"]
+        if arguments.get("edges"):
+            args.extend(["--edges", arguments["edges"]])
+        if arguments.get("named_graph"):
+            args.extend(["--named-graph", arguments["named_graph"]])
+        if arguments.get("graph_type"):
+            args.extend(["--graph-type", arguments["graph_type"]])
+        if arguments.get("analyze"):
+            args.append("--analyze")
+        return run_theory2_command(args)
+
+    elif name == "theory2_combinatorics_analyze_graph":
+        args = ["combinatorics", "analyze-graph", "--edges", arguments["edges"]]
+        if arguments.get("explain"):
+            args.append("--explain")
+        return run_theory2_command(args)
+
+    elif name == "theory2_combinatorics_count":
+        args = ["combinatorics", "count", "--type", arguments["type"], "--n", str(arguments["n"])]
+        if arguments.get("k"):
+            args.extend(["--k", str(arguments["k"])])
+        if arguments.get("explain"):
+            args.append("--explain")
+        return run_theory2_command(args)
+
+    elif name == "theory2_combinatorics_solve_tsp":
+        args = ["combinatorics", "tsp", "--distances", arguments["distances"]]
+        if arguments.get("method"):
+            args.extend(["--method", arguments["method"]])
+        return run_theory2_command(args)
+
+    elif name == "theory2_combinatorics_solve_knapsack":
+        args = ["combinatorics", "knapsack",
+                "--values", arguments["values"],
+                "--weights", arguments["weights"],
+                "--capacity", str(arguments["capacity"])]
+        if arguments.get("method"):
+            args.extend(["--method", arguments["method"]])
         return run_theory2_command(args)
 
     else:

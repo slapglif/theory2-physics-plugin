@@ -29,6 +29,10 @@ Always use `--json` for structured, parseable output.
 | Operator learning | ml | `train-fno`, `train-e3nn` |
 | Theorem proving | prove | `lean --statement="..."` |
 | Cross-validation | verify | `cross-check --claim="..."` |
+| DNA/RNA/protein | symbolic | `bio-sequence`, `bio-protein`, `bio-structure` |
+| Graph algorithms | symbolic | `graph --operation=shortest_path` |
+| Combinatorics | symbolic | `combinatorics --operation=catalan` |
+| Discrete optimization | symbolic | `discrete-opt --problem=tsp` |
 
 ## Symbolic Mathematics
 
@@ -126,6 +130,113 @@ For molecular systems respecting 3D symmetry:
 
 ```bash
 theory --json ml train-e3nn --irreps-hidden="32x0e+16x1o+8x2e" --use-gates
+```
+
+## Bioinformatics & Molecular Biology
+
+### Sequence Analysis
+
+Work with DNA, RNA, and protein sequences using Biopython:
+
+```bash
+# Transcribe DNA to RNA
+theory --json symbolic bio-sequence --sequence="ATGCGTACG" --operation=transcribe
+
+# Translate DNA to protein
+theory --json symbolic bio-sequence --sequence="ATGCGTACG" --operation=translate
+
+# Reverse complement
+theory --json symbolic bio-sequence --sequence="ATGCGTACG" --operation=reverse_complement
+
+# GC content calculation
+theory --json symbolic bio-sequence --sequence="ATGCGTACG" --operation=gc_content
+```
+
+### Protein Analysis
+
+```bash
+# Calculate molecular weight
+theory --json symbolic bio-protein --sequence="MKTAYIAKQR" --operation=molecular_weight
+
+# Compute isoelectric point
+theory --json symbolic bio-protein --sequence="MKTAYIAKQR" --operation=isoelectric_point
+
+# Predict secondary structure
+theory --json symbolic bio-protein --sequence="MKTAYIAKQR" --operation=secondary_structure
+```
+
+### Structure Analysis
+
+Load and analyze protein structures from PDB files:
+
+```bash
+# Parse PDB structure
+theory --json symbolic bio-structure --pdb-id="1BNA" --operation=get_info
+
+# Extract sequence from structure
+theory --json symbolic bio-structure --pdb-id="1BNA" --operation=extract_sequence
+
+# Calculate RMSD between structures
+theory --json symbolic bio-structure --pdb-id="1BNA" --reference="1BNB" --operation=rmsd
+```
+
+## Combinatorics & Discrete Mathematics
+
+### Graph Theory
+
+Using NetworkX for graph algorithms:
+
+```bash
+# Create and analyze graph
+theory --json symbolic graph --edges="[[0,1],[1,2],[2,0]]" --operation=shortest_path --source=0 --target=2
+
+# Find connected components
+theory --json symbolic graph --edges="[[0,1],[2,3]]" --operation=components
+
+# Calculate centrality measures
+theory --json symbolic graph --edges="[[0,1],[1,2],[2,0]]" --operation=centrality --method=betweenness
+
+# Check graph properties
+theory --json symbolic graph --edges="[[0,1],[1,2],[2,0]]" --operation=is_planar
+```
+
+### Enumeration
+
+Compute combinatorial numbers and sequences:
+
+```bash
+# Catalan numbers
+theory --json symbolic combinatorics --operation=catalan --n=10
+
+# Bell numbers (partitions)
+theory --json symbolic combinatorics --operation=bell --n=5
+
+# Stirling numbers (first/second kind)
+theory --json symbolic combinatorics --operation=stirling --n=5 --k=2 --kind=second
+
+# Partition function
+theory --json symbolic combinatorics --operation=partitions --n=10
+```
+
+### Optimization Problems
+
+Solve classic discrete optimization problems:
+
+```bash
+# Traveling salesman problem
+theory --json symbolic discrete-opt --problem=tsp --distances="[[0,10,15],[10,0,20],[15,20,0]]"
+
+# Knapsack problem
+theory --json symbolic discrete-opt --problem=knapsack \
+  --weights="[2,3,4,5]" --values="[3,4,5,6]" --capacity=8
+
+# Vertex cover
+theory --json symbolic discrete-opt --problem=vertex_cover \
+  --edges="[[0,1],[1,2],[2,3]]"
+
+# Maximum flow
+theory --json symbolic discrete-opt --problem=max_flow \
+  --edges="[[0,1,10],[1,2,5],[0,2,15]]" --source=0 --sink=2
 ```
 
 ## Theorem Proving
@@ -234,9 +345,11 @@ The plugin provides MCP tools for direct invocation:
 
 ## Agents
 
-- **physics-solver**: Autonomous multi-step problem solving
+- **physics-solver**: Autonomous multi-step problem solving (physics, ML, bioinformatics)
 - **physics-verifier**: Cross-validation and verification
 - **theorem-prover**: Automated Lean 4 theorem proving with RobustLeanProver
+- **bio-analyzer**: Sequence analysis, protein structure, and molecular biology workflows
+- **graph-solver**: Graph algorithms and discrete optimization problems
 
 ## Best Practices
 

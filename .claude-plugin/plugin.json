@@ -1,7 +1,7 @@
 {
   "name": "theory2-physics",
   "version": "1.0.0",
-  "description": "Mathematical physics tooling suite - symbolic math, numerical physics, ML, theorem proving, and verification",
+  "description": "Mathematical physics tooling suite - symbolic math, numerical physics, ML, theorem proving, verification, bioinformatics, and discrete mathematics",
   "author": {
     "name": "slapglif",
     "url": "https://github.com/slapglif"
@@ -15,6 +15,13 @@
     "quantum-chemistry",
     "theorem-proving",
     "neural-operators",
-    "lie-algebras"
+    "lie-algebras",
+    "bioinformatics",
+    "molecular-biology",
+    "sequence-analysis",
+    "graph-theory",
+    "combinatorics",
+    "discrete-mathematics",
+    "optimization"
   ]
 }
