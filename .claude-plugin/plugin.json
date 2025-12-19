@@ -1,6 +1,6 @@
 {
   "name": "theory2-physics",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Mathematical physics tooling suite - symbolic math, numerical physics, ML, theorem proving, verification, bioinformatics, and discrete mathematics",
   "author": {
     "name": "slapglif",
@@ -23,5 +23,6 @@
     "combinatorics",
     "discrete-mathematics",
     "optimization"
-  ]
+  ],
+  "mcpServers": "./.mcp.json"
 }
