@@ -1,5 +1,11 @@
 {
   "name": "theory2-physics-plugin",
+  "owner": "slapglif",
   "description": "Mathematical physics tooling suite for Claude Code",
-  "plugins": ["theory2-physics"]
+  "plugins": [
+    {
+      "name": "theory2-physics",
+      "path": "./theory2-physics"
+    }
+  ]
 }
