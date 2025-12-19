@@ -1,11 +1,22 @@
 {
   "name": "theory2-physics-plugin",
-  "owner": "slapglif",
-  "description": "Mathematical physics tooling suite for Claude Code",
+  "owner": {
+    "name": "slapglif",
+    "email": "slapglif@github.com"
+  },
+  "metadata": {
+    "description": "Mathematical physics tooling suite for Claude Code",
+    "version": "1.1.0"
+  },
   "plugins": [
     {
       "name": "theory2-physics",
-      "path": "./theory2-physics"
+      "source": "./theory2-physics",
+      "description": "Symbolic math, numerical physics, ML, theorem proving, bioinformatics, combinatorics",
+      "version": "1.1.0",
+      "author": {
+        "name": "slapglif"
+      }
     }
   ]
 }
