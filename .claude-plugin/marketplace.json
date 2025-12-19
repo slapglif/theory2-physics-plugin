@@ -1,0 +1,5 @@
+{
+  "name": "theory2-physics-plugin",
+  "description": "Mathematical physics tooling suite for Claude Code",
+  "plugins": ["theory2-physics"]
+}
