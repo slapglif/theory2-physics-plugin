@@ -676,34 +676,39 @@ Examples:
 
 RobustLeanProver provides intelligent tactic selection, parallel proof search, and caching.
 
-Tactic Tiers (auto mode tries in order):
-1. fast (parallel): rfl, trivial, decide (~100ms)
-2. arithmetic (parallel): norm_num, omega, ring, simp (~500ms)
-3. search (sequential): simp_all, aesop, tauto (~3s)
-4. combined (sequential): simp; ring, norm_num; simp (~10s)
+Tactic Tiers (auto mode tries in order with 120s default timeout):
+1. fast (parallel): rfl, trivial, decide (~1s)
+2. arithmetic (parallel): norm_num, omega, ring, simp (~3s)
+3. search (sequential): simp_all, aesop, tauto (~10s)
+4. atp (sequential): duper, simp; ring, norm_num; simp (~30s each)
+5. hammer (sequential): hammer with neural premise selection (~60s)
 
 Available tactics:
-- auto: RobustLeanProver with 4-tier fallback (RECOMMENDED)
+- auto: Full 5-tier fallback including ATP provers (RECOMMENDED, use timeout=120)
 - rfl: Reflexivity (fastest for definitional equalities)
 - decide: Decidable propositions
 - omega: Linear arithmetic
 - simp: Simplification
-- ring: Ring algebra (requires mathlib)
+- ring: Ring algebra
+- duper: Superposition ATP prover (61% benchmark success, uses lean-hammer REPL)
+- hammer: Neural premise selection + Duper + Aesop (uses lean-hammer REPL)
 
 Problem Type Detection:
 - Numeric equality (2 + 2 = 4) → rfl, decide
 - Linear arithmetic (n + 0 = n) → omega, simp
 - Decidable props (True, 1 < 2) → decide
+- Complex theorems → duper, hammer
 
 Features:
 - Proof caching: Same statement = instant cache hit
 - Parallel search: Multiple tactics tried simultaneously
 - Problem analysis: Intelligent tactic ordering
+- ATP provers: duper/hammer for hard theorems (require lean-hammer REPL)
 
 Examples:
-- statement="2 + 2 = 4" → auto mode proves with rfl in ~400ms
-- statement="∀ n : Nat, n + 0 = n" → proves with omega in ~900ms
-- statement="10 * 10 = 100", tactic="decide" → specific tactic""",
+- statement="2 + 2 = 4" → auto proves with rfl in ~400ms
+- statement="∀ n : Nat, n + 0 = n" → proves with simp in ~900ms
+- statement="∀ a b : Nat, a + b = b + a", tactic="hammer" → proves using Nat.add_comm""",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -713,14 +718,14 @@ Examples:
                 },
                 "tactic": {
                     "type": "string",
-                    "enum": ["auto", "rfl", "decide", "simp", "omega", "ring", "trivial", "norm_num", "aesop", "tauto"],
-                    "description": "Proof tactic (auto = RobustLeanProver with fallback)",
+                    "enum": ["auto", "rfl", "decide", "simp", "omega", "ring", "trivial", "norm_num", "aesop", "tauto", "duper", "hammer"],
+                    "description": "Proof tactic (auto = 5-tier fallback including ATP, duper/hammer = direct ATP)",
                     "default": "auto"
                 },
                 "timeout": {
                     "type": "integer",
-                    "description": "Timeout in seconds",
-                    "default": 60
+                    "description": "Timeout in seconds (use 120+ for auto to reach ATP tiers)",
+                    "default": 120
                 },
                 "no_cache": {
                     "type": "boolean",
