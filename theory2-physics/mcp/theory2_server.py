@@ -8,31 +8,86 @@ import json
 import subprocess
 import sys
 from typing import Any
+import os
+import datetime
+
+DEBUG_LOG = "/tmp/theory2_debug.log"
+
+def log(msg: str):
+    """Log debug message to file."""
+    with open(DEBUG_LOG, "a") as f:
+        timestamp = datetime.datetime.now().isoformat()
+        f.write(f"[{timestamp}] {msg}\n")
+
+USE_HEADERS = True
 
 # MCP protocol implementation
 def send_response(response: dict) -> None:
     """Send JSON-RPC response to stdout."""
     msg = json.dumps(response)
-    sys.stdout.write(f"Content-Length: {len(msg)}\r\n\r\n{msg}")
+    log(f"Sending response: {msg[:200]}...")
+    
+    if USE_HEADERS:
+        sys.stdout.write(f"Content-Length: {len(msg)}\r\n\r\n{msg}")
+    else:
+        sys.stdout.write(f"{msg}\n")
+        
     sys.stdout.flush()
 
 def read_request() -> dict | None:
     """Read JSON-RPC request from stdin."""
-    headers = {}
-    while True:
-        line = sys.stdin.readline()
-        if not line or line == "\r\n":
-            break
-        if ":" in line:
-            key, value = line.split(":", 1)
+    global USE_HEADERS
+    try:
+        first_line = sys.stdin.readline()
+        if not first_line:
+            log("Stdin closed")
+            return None
+        
+        # Check if it's a header or direct JSON
+        if first_line.startswith('{'):
+            log(f"Received direct JSON line: {first_line[:200]}...")
+            USE_HEADERS = False
+            return json.loads(first_line)
+            
+        USE_HEADERS = True
+        # Parse headers
+        headers = {}
+        if ":" in first_line:
+            key, value = first_line.split(":", 1)
             headers[key.strip()] = value.strip()
+            log(f"Read header: {key}={value}")
+        
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+            
+            if line == "\r\n" or line == "\n":
+                break
+                
+            if ":" in line:
+                key, value = line.split(":", 1)
+                headers[key.strip()] = value.strip()
+                log(f"Read header: {key}={value}")
 
-    content_length = int(headers.get("Content-Length", 0))
-    if content_length == 0:
+        content_length_str = headers.get("Content-Length")
+        if not content_length_str:
+            log("No Content-Length header found")
+            return None
+            
+        content_length = int(content_length_str)
+        log(f"Reading content of length: {content_length}")
+        
+        content = sys.stdin.read(content_length)
+        if not content:
+             log("Failed to read content")
+             return None
+             
+        log(f"Received request: {content[:200]}...")
+        return json.loads(content)
+    except Exception as e:
+        log(f"Error reading request: {e}")
         return None
-
-    content = sys.stdin.read(content_length)
-    return json.loads(content)
 
 THEORY2_BIN = "/home/mikeb/theory2/.venv/bin/theory"
 
@@ -68,33 +123,47 @@ Example output:
     },
     {
         "name": "theory2_symbolic_lie_algebra",
-        "description": """Query properties of Lie algebras (E6, E7, E8, SU(n), SO(n), etc.).
+        "description": """Query properties of Lie algebras. Supports all exceptional and classical algebras.
+
+Supported algebras: G2, F4, E6, E7, E8, SO10, SO8, SU5, SU3, SU2
 
 Available queries:
 - dimension: Total dimension of the algebra
 - rank: Rank (number of Cartan generators)
 - fundamental_rep: Dimension of fundamental representation
-- alpha_inverse: Compute α⁻¹ using the Lie algebra formula
+- alpha_inverse: Compute α⁻¹ = dim + fund/(2×rank) for ANY algebra
 
-Examples:
-- E7: dimension=133, rank=7, fundamental_rep=56
-- E8: dimension=248, rank=8, fundamental_rep=248
-- SU(3): dimension=8, rank=2, fundamental_rep=3""",
+α⁻¹ values (E7 uniquely gives 137):
+- E7: 137.0 (closest to experimental 137.036)
+- E6: 80.25, E8: 263.5, G2: 15.75, F4: 55.25
+- SO10: 46.6, SU5: 24.625""",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "algebra_type": {
                     "type": "string",
-                    "description": "Lie algebra type (E6, E7, E8, SU2, SU3, SO3, etc.)",
-                    "examples": ["E7", "E8", "SU3", "SO10"]
+                    "description": "Lie algebra type: G2, F4, E6, E7, E8, SO10, SO8, SU5, SU3, SU2",
+                    "examples": ["E7", "E8", "SO10", "SU5"]
                 },
                 "query": {
                     "type": "string",
-                    "enum": ["dimension", "rank", "fundamental_rep", "alpha_inverse"],
+                    "enum": ["dimension", "rank", "fundamental_rep", "alpha_inverse", "weyl_group_order"],
                     "description": "Property to query"
                 }
             },
             "required": ["algebra_type", "query"]
+        }
+    },
+    {
+        "name": "theory2_symbolic_compare_alpha",
+        "description": """Compare α⁻¹ = dim + fund/(2×rank) across ALL supported Lie algebras.
+
+Verifies that E7 is uniquely the only Lie algebra where this formula yields α⁻¹ ≈ 137.
+
+Returns a ranked list sorted by closeness to experimental value 137.035999084.""",
+        "inputSchema": {
+            "type": "object",
+            "properties": {}
         }
     },
     {
@@ -1120,6 +1189,9 @@ def handle_tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             "--query", arguments["query"]
         ])
 
+    elif name == "theory2_symbolic_compare_alpha":
+        return run_theory2_command(["symbolic", "compare-alpha"])
+
     elif name == "theory2_symbolic_eval":
         args = ["symbolic", "eval", "--expr", arguments["expr"]]
         if arguments.get("substitutions"):
@@ -1336,65 +1408,81 @@ def handle_tool_call(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
 
 def main():
     """Main MCP server loop."""
-    while True:
-        request = read_request()
-        if request is None:
-            break
+    log("Server starting...")
+    try:
+        while True:
+            request = read_request()
+            if request is None:
+                break
 
-        method = request.get("method", "")
-        req_id = request.get("id")
-        params = request.get("params", {})
+            method = request.get("method", "")
+            req_id = request.get("id")
+            params = request.get("params", {})
+            
+            log(f"Handling method: {method}")
 
-        if method == "initialize":
-            send_response({
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {
-                        "tools": {"listChanged": False}
-                    },
-                    "serverInfo": {
-                        "name": "theory2-physics",
-                        "version": "1.0.0"
+            if method == "initialize":
+                send_response({
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {
+                            "tools": {"listChanged": False}
+                        },
+                        "serverInfo": {
+                            "name": "theory2-physics",
+                            "version": "1.0.0"
+                        }
                     }
-                }
-            })
+                })
 
-        elif method == "notifications/initialized":
-            pass  # No response needed
+            elif method == "notifications/initialized":
+                pass  # No response needed
 
-        elif method == "tools/list":
-            send_response({
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {"tools": TOOLS}
-            })
+            elif method == "ping":
+                send_response({
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {}
+                })
 
-        elif method == "tools/call":
-            tool_name = params.get("name", "")
-            tool_args = params.get("arguments", {})
-            result = handle_tool_call(tool_name, tool_args)
-            send_response({
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "content": [{
-                        "type": "text",
-                        "text": json.dumps(result, indent=2)
-                    }]
-                }
-            })
+            elif method == "tools/list":
+                send_response({
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {"tools": TOOLS}
+                })
 
-        else:
-            send_response({
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "error": {
-                    "code": -32601,
-                    "message": f"Method not found: {method}"
-                }
-            })
+            elif method == "tools/call":
+                tool_name = params.get("name", "")
+                tool_args = params.get("arguments", {})
+                log(f"Calling tool: {tool_name}")
+                result = handle_tool_call(tool_name, tool_args)
+                send_response({
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [{
+                            "type": "text",
+                            "text": json.dumps(result, indent=2)
+                        }]
+                    }
+                })
+
+            else:
+                log(f"Method not found: {method}")
+                send_response({
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32601,
+                        "message": f"Method not found: {method}"
+                    }
+                })
+    except Exception as e:
+        log(f"Server crashed: {e}")
+        raise
 
 
 if __name__ == "__main__":
